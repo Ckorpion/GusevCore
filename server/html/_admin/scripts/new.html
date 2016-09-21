@@ -1,0 +1,145 @@
+<div class="newScriptBox">
+   <div class="title">{{caption}}</div>
+   <div class="newScriptData lines">
+      <div class="name line">Type</div>
+      <div class="value line">
+         <div>
+            <input type="text" id="type" value="{{type}}" />
+         </div>
+         <div class="help">An arbitrary string. Combine scripts in groups to avoid conflicts.</div>         
+      </div>
+   </div>
+   <div class="newScriptData lines">
+      <div class="name line">Title</div>
+      <div class="value line">
+         <div>
+            <input type="text" id="title" value="{{title}}" />
+         </div>
+         <div class="help">Additional. An arbitrary string. Name for easy viewing logs.</div>         
+      </div>
+   </div>
+   <div class="newScriptData lines">
+      <div class="name line">Description</div>
+      <div class="value line">
+         <div>
+            <textarea id="description" style="width: 469px;height: 50px;">{{description}}</textarea>
+         </div>
+         <div class="help">Additional. An arbitrary description.</div>         
+      </div>
+   </div>
+   <div class="newScriptData lines">
+      <div class="name line">Config</div>
+      <div class="value line">
+         <div>
+            <div class="newScriptData lines">
+               <div class="name line">Mandatory</div>
+               <div class="value line">
+                  <div>
+                     <div class="newScriptData lines">
+                        <div class="name line">Schedule</div>
+                        <div class="value line">
+                           <div>
+                              <input type="text" id="schedule_min" value="{{schedule_min}}" style="width: 45px;text-align: center;" placeholder="Minute" />
+                              <input type="text" id="schedule_hour" value="{{schedule_hour}}" style="width: 45px;text-align: center;" placeholder="Hour" />
+                              <input type="text" id="schedule_day" value="{{schedule_day}}" style="width: 45px;text-align: center;" placeholder="Day" />
+                              <input type="text" id="schedule_month" value="{{schedule_month}}" style="width: 45px;text-align: center;" placeholder="Month" />
+                              <input type="text" id="schedule_year" value="{{schedule_year}}" style="width: 45px;text-align: center;" placeholder="Year" />
+                           </div>
+                           <div class="help">Variants: "*", "\d", "\d,\d", "*/d". \d - Time unit</div>  
+                        </div>
+                     </div>
+                     <div class="newScriptData lines">
+                        <div class="name line">Terminate</div>
+                        <div class="value line">
+                           <div>
+                              <input type="text" id="terminate" value="{{terminate}}" />
+                           </div>
+                           <div class="help">Maximum seconds allotted for script.</div>  
+                        </div>
+                     </div>
+                     <div class="newScriptData lines">
+                        <div class="name line">Importance</div>
+                        <div class="value line">
+                           <div>
+                              <input type="radio" name="importance" value="0" {{isImportance0}}> 0 - Perform all<br>
+                              <input type="radio" name="importance" value="1" {{isImportance1}}> 1 - Only from group<br>
+                              <input type="radio" name="importance" value="2" {{isImportance2}}> 2 - Only from all
+                           </div>
+                           <div class="help">Specify the Importance to avoid conflicts.</div>  
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="newScriptData lines">
+               <div class="name line">Additional</div>
+               <div class="value line">
+                  <div>
+                     <div class="newScriptData lines">
+                        <div class="name line">Rate</div>
+                        <div class="value line">
+                           <div>
+                              <input type="text" id="rate" value="{{rate}}" />
+                           </div>
+                           <div class="help">The number of sorting.</div>         
+                        </div>
+                     </div>
+                     <div class="newScriptData lines">
+                        <div class="name line">AfterTerminate</div>
+                        <div class="value line">
+                           <div>
+                              <input type="radio" name="afterTerminate" value="0" {{isAfterTerminate0}}> 0 - Continue on schedule<br>
+                              <input type="radio" name="afterTerminate" value="1" {{isAfterTerminate1}}> 1 - Reload<br>
+                              <input type="radio" name="afterTerminate" value="2" {{isAfterTerminate2}}> 2 - Pause
+                           </div>
+                           <div class="help">Action after terminate.</div>  
+                        </div>
+                     </div>
+                     <div class="newScriptData lines">
+                        <div class="name line">Password</div>
+                        <div class="value line">
+                           <div>
+                              <input type="text" id="password" value="{{password}}" />
+                           </div>
+                           <div class="help">String coming in $argv[3] when calling the script.</div>         
+                        </div>
+                     </div>
+                     <div class="newScriptData lines">
+                        <div class="name line">Reply</div>
+                        <div class="value line">
+                           <div>
+                              <input type="checkbox" id="reply" {{isReply}} /> Writes the results to logs
+                           </div>
+                           <div class="help">All output data save in the logs.</div>         
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+   <div class="newScriptData lines">
+      <div class="name line">URL</div>
+      <div class="value line">
+         <div>
+            <input type="text" id="url" style="width: 469px;" value="{{url}}" />
+         </div>
+         <div class="help">Mandatory. The full path to the script. For example the path to the root index.php:</div>
+         <div class="help">{{examplePath}}</div>
+      </div>
+   </div>
+   <div class="newScriptData lines">
+      <div class="name line">Data</div>
+      <div class="value line">
+         <div>
+            <textarea id="data" style="width: 469px;height: 50px;">{{data}}</textarea>
+         </div>
+         <div class="help">Additional. An arbitrary info.</div>         
+      </div>
+   </div>
+   <div style="margin: 25px; text-align: center;">
+      <div id="error"></div>
+      <button onclick="admin.script.save({{id}});">{{button_caption}}</button>
+   </div>
+</div>

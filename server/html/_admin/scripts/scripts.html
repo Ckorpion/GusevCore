@@ -1,0 +1,24 @@
+<div class="GC-_admin_scripts page">
+   <div class="title">Scripts</div>
+   <div>
+      <div class="lines" style="padding-bottom: 10px;">
+         <button onclick="admin.script.add();" style="vertical-align: middle;">Add script</button>
+         <div class="line" style="vertical-align: middle;margin-left: 20px;">
+            All scripts: {{countAll}}, active: {{countActive}}{{countAbortedHTML}}
+         </div>
+      </div>
+   </div>
+   <table class="table">
+      <tr class="tableHead">
+         <td width="32px" class="tableCenter">ID</td>
+         <td width="110px">Type</td>
+         <td width="150px">Name</td>
+         <td>Description</td>
+         <td width="85px" class="tableCenter">Status</td>
+         <td width="110px" class="tableCenter">Schedule</td>
+         <td width="130px" class="tableCenter">Date</td>
+         <td width="99px" class="tableCenter">Actions</td>
+      </tr>
+      {{scripts}}
+   </table>
+</div>

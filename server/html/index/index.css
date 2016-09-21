@@ -1,0 +1,12 @@
+.info {
+   text-align: center;
+}
+
+.info a {
+   color: #313131;
+   text-decoration: none;
+}
+
+.info a:hover {
+   text-decoration: underline;
+}

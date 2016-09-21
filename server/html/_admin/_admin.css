@@ -1,0 +1,11 @@
+.GC-page-_admin_main .updateItem {
+   display: inline-block;
+   vertical-align: middle;
+   margin-right: 10px;
+   padding: 5px 0px;
+}
+
+#initGCOnline_box {
+   padding: 10px 0px 30px;
+   text-align: center;
+}
