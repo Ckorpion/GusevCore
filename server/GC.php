@@ -1,7 +1,7 @@
 <?
    /**
     * Класс GC
-    * Version 3.13 of 11.09.2016
+    * Version 3.181 of 30.10.2016
     *
     * GusevCore – Веб сервер для сайтов и приложений
     * http://gusevcore.ru
@@ -25,6 +25,7 @@
     * Список приватных функций:
     *    getHTML - Получаем HTML блок
     *    paramsRender - Обрабатывает параметры для шаблона
+    *    logicRender - Находит и обрабатывает логику в html
     *    replaceComponents - Подключает компоненты описанные в HTML коде
     *    getDefaultPage - Возращает стандартную модель страницы
     *    getResource - Преобразует ресурсы в HTML теги
@@ -32,8 +33,8 @@
    class GC {
 
       private $blocks = array();          // КЭШ HTML блоков для getHTML
-      public $version = '3.13';           // Версия установки, используется при обновлении
-      public $versionDate = '11.09.2016'; // Версия установки, используется при обновлении
+      public $version = '3.181';          // Версия установки, используется при обновлении
+      public $versionDate = '30.10.2016'; // Версия установки, используется при обновлении
 
       // Системные страницы
       public $system_pages = array(
@@ -60,11 +61,9 @@
        *    resource - Набор ресурсов для отображения HTML страницы(скрипты и стили)
        *    HTML - Код страницы
        *    meta - Мета теги
-       *       title - Заголовок страницы
-       *       description - Описание страницы
        */
       public function getPage($name, $params = array(), $noRender = false, $clear = false) {
-         GLOBAL $DB, $GCF;
+         GLOBAL $GCF;
 
          // Установим информацию о странице
          $page = $this -> getDefaultPage();
@@ -80,7 +79,7 @@
          if (count(explode('?', $modul_name)) > 1) {
             $page['HTML'] = $this -> getHTML($path . explode('?', $modul_name)[1], $params, $noRender, $clear);
          } else {
-            $isConnect = include 'html/'. $path . $modul_name . '.php';
+            $isConnect = require_once('html/'. $path . $modul_name . '.php');
             if (!$isConnect) {
                return false;
             }
@@ -109,6 +108,7 @@
          GLOBAL $GCF;
 
          $html = $GCF -> format($html, $this -> paramsRender($params));
+         $html = $this -> logicRender($html);
 
          if ($clear) {
             $html = preg_replace("/{{.+}}/im", '', $html);
@@ -303,10 +303,9 @@
             'name' => $page['name'],
             'className' => $page['className'],
             'template' => $page['template'],
-            'title' => $page['meta']['title'],
-            'description' => $page['meta']['description'],
             'HTML' => $page['HTML']
          );
+         $data = array_merge($data, $page['meta']);
 
          $template = $this -> getPage($page['template'], $data)['HTML'];
 
@@ -354,7 +353,7 @@
             $scripts = $CONFIG -> scripts;
             $i = 0;
             while (isset($scripts[$i])) {
-               require $scripts[$i];
+               require_once($scripts[$i]);
                $i++;
             }
          }
@@ -419,11 +418,48 @@
             if (is_array($value)) {
                $newParams = array_merge($newParams, $this -> paramsRender($value, $path . $key . '/'));
             } else {
+               // Найдем логические блоки
+               preg_match_all('/{{\?((.|\n)*?){{\?}}/im', $value, $logics);
+               $logics = $logics[0];
+               // Удалим их
+               for ($i = 0; $i < count($logics); $i++) {
+                  $value = str_replace($logics[$i], '', $value);
+               }
                $newParams['{{' . $path . $key . '}}'] = $value;
             }
          }
 
          return $newParams;
+      }
+
+      /**
+       * Находит и обрабатывает логику в html
+       * @param $html (String) - HTML код 
+       * @return (String) - HTML код 
+       */
+      private function logicRender($html = '') {
+         // Найдем все логические блоки
+         preg_match_all('/{{\?((.|\n)*?){{\?}}/im', $html, $logics);
+         $logics = $logics[0];
+
+         // Переберем
+         for ($i = 0; $i < count($logics); $i++) {
+            $code = $logics[$i];
+
+            // На основе HTML логики составим PHP логику
+            $result = '';
+            $code = str_replace('{{??}}', '";} else { $result .= "', $code);
+            $code = preg_replace('/{{\?\?((.|\n)*?)}}/im', '";} elseif ($1) {$result .= "', $code);
+            $code = str_replace('{{?}}', '";}', $code);
+            $code = preg_replace('/{{\?((.|\n)*?)}}/im', 'if ($1) {$result .= "', $code);
+            // Выполним логику
+            eval($code);
+
+            // Заменим HTML логику на результат PHP логики
+            $html = str_replace($logics[$i], $result, $html);
+         }
+
+         return $html;
       }
 
       /**

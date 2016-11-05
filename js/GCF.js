@@ -1,6 +1,6 @@
 /**
  * Класс GCF
- * Version: 3.14 of 16.09.2016
+ * Version: 3.15 of 15.10.2016
  * 
  * Сборник функций и прототипов
  * http://gusevcore.ru
@@ -32,6 +32,7 @@
  *    subscribe - Подписываем элементы на события по селектору
  *    random - Получает случайное целое число в диапазона
  *    peopleDate - Преобразование timestamp в понятный формат
+ *    numValue - Склонение числительных
  *    parseURL - Парсим url
  *    getParam - Получаем get параметр
  *    getXH - Получаем xmlhttp для Ajax запросов
@@ -302,6 +303,18 @@ GCF = {
       str += ' в ' + date.getHours() + ':' + minutes;
 
       return str;
+   },
+
+
+    /**
+    * Склонение числительных
+    * @param number (Integer) - Число
+    * @param titles (Array) - Массив строк склоненных к 1, 2, 5
+    * @return (String) - Склоненная строка
+    */
+   numValue: function(number, titles) {
+      var cases = [2, 0, 1, 1, 1, 2];
+      return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[Math.min(number % 10, 5)]];
    },
 
    /**

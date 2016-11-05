@@ -1,5 +1,7 @@
 <?
    class _admin_logs {
+      public $API = array('reply');
+      
       public function init($page, $params) {
          GLOBAL $GC, $GCF, $DB;
 

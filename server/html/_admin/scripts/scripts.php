@@ -1,5 +1,7 @@
 <?
    class _admin_scripts {
+      public $API = array('act', 'getNewForm', 'edit', 'save');
+
       public function init($page, $params) {
          GLOBAL $GC, $GCF;
 

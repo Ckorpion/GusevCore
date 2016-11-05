@@ -2,6 +2,7 @@
    session_start();
 
    class _admin_update {
+      public $API = array('GC', 'GCOnline', 'createTableLogs', 'initGCOnline');
       /*
        * Обновляет GusevCore
        */

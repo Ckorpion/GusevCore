@@ -51,6 +51,10 @@
             require 'server/api.php';
             $API = new API();
          }
+         if (!isset($API -> API) || !in_array($method[1], $API -> API)) {
+            echo json_encode(array('error' => array('code' => 2, 'msg' => 'Method not found')));
+            exit();
+         }
          $response = $API -> $method[1]($params);
 
          // Если ответ это массив - преобразуем в JSON

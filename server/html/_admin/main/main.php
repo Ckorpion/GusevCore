@@ -1,5 +1,7 @@
 <?
    class _admin_main {
+      public $API = array('initGCOnline');
+      
       public function init($page, $params) {
          GLOBAL $GC, $DB;
 

@@ -1,5 +1,7 @@
 <?
    class _admin_auth {
+      public $API = array('auth', 'logout');
+
       public function init($page, $params) {
          GLOBAL $GC;
 
