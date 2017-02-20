@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+   <head> 
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+      <meta name="mobile-web-app-capable" content="yes">
+      <meta name="apple-mobile-web-app-capable" content="yes">
+      
+      <title>{{title}}</title> 
+      <meta name="description" content="{{description}}">
+
+      <script src="js/GCF.js" type="text/javascript"></script>
+      <script src="js/GCAP.js" type="text/javascript"></script>
+      <link rel="shortcut icon" href="modules/_admin/images/favicon.ico">
+      {{resource}}
+   </head>
+   <body data-template="{{template}}">
+      <div class="GC-_admin_menu">
+         <div class="_admin_menu-box">
+            <div class="_admin_menu-logo">
+               <a href="_admin" class="link">
+                  <img src="server/html/_admin/images/logo.png" class="_admin_menu-logoImg" />
+               </a>
+            </div>
+            <div class="_admin_menu-boxButtons">
+               {{? {{isGCLogsVisible}}}}
+               <a href="?page=logs" class="_admin_menu-boxItem link">Logs</a>
+               {{?}}
+               {{? {{isGCOnlineVisible}}}}
+               <a href="?page=scripts" class="_admin_menu-boxItem link">Scripts</a>
+               {{?}}
+               {{? {{isAuthVisible}}}}
+               <a onclick="admin.logout();" class="_admin_menu-boxItem">Log out</a>
+               {{?}}
+            </div>
+         </div>
+      </div>
+      <div id="GC">
+         <div class="GC-page GC-page-{{className}}">{{HTML}}</div>
+      </div>
+      <div id="popupBox">
+         <div id="popupClose" onclick="admin.popup.close();">X</div>
+         <div id="popup"></div>
+      </div>
+      <div class="GC-_admin_bottom">
+         <div>
+            <a href="http://gusevcore.ru" target="_blank">GusevCore</a>
+         </div>
+         <div>
+            {{year}}
+         </div>
+      </div>
+   </body> 
+</html>

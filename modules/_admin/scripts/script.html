@@ -1,0 +1,22 @@
+<tr>
+   <td>{{id}}</td>
+   <td>{{type}}</td>
+   <td>{{title}}</td>
+   <td>{{description}}</td>
+   <td class="tableCenter">{{status_str}}</td>
+   <td class="tableCenter">{{schedule}}</td>
+   <td class="tableRight">{{statusTime}}</td>
+   <td class="tableRight" style="font-size: 0px;">
+      {{? {{isVisibleButtonStart}}}}
+      <div title="Start" onclick="admin.script.act('start', {{id}});" class="scriptButton" style="background-position-x: -42px;"></div>
+      {{?}}
+      {{? {{isVisibleButtonStop}}}}
+      <div title="Stop" onclick="admin.script.act('stop', {{id}});" class="scriptButton" style="background-position-x: -21px;"></div>
+      {{?}}
+      {{? {{isVisibleButtonReload}}}}
+      <div title="Reload" onclick="admin.script.act('reload', {{id}});" class="scriptButton" style="background-position-x: -63px;"></div>
+      {{?}}
+      <div title="eEdit" onclick="admin.script.edit({{id}});" class="scriptButton" style="background-position-x: 0px;"></div>
+      <div title="Delete" onclick="admin.script.act('delete', {{id}});" class="scriptButton" style="background-position-x: -84px;"></div>
+   </td>
+</tr>

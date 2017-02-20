@@ -1,0 +1,43 @@
+<div class="GC-_admin_main page">
+   <div class="title">Information</div>
+   <div class="lines">
+      <div class="line" style="width: 50%;">
+         <div>GusevCore version: {{GCVersion}} of {{GCDate}}</div>
+         <div style="padding-left: 30px;">GCF.js: <span id="GCFversion"></span></div>
+         <div>GCOnline version: {{GCOnlineVersion}}</div>
+         <br><br>
+         {{? {{isVisibleNewGC}}}}
+         <div>
+            <div class="updateItem">Available new GusevCore version {{newGC}}</div>
+            <button onclick="admin.upgrade(\'upGC\');">Upgrade GusevCore</button>
+         </div>
+         {{?}}
+         {{? {{isVisibleNewGCOnline}}}}
+         <div>
+            <div class="updateItem">Available new GCOnline version {{newGCOnline}}</div>
+            <button onclick="admin.upgrade(\'upGCOnline\');">Upgrade GCOnline</button>
+         </div>
+         {{?}}
+      </div>
+      <div class="line" style="width: 50%;">
+         {{? {{isVisibleSetDB}}}}
+         <div>To use the log, set the data of the database in config.php</div>
+         {{?}}
+         {{? {{isVisibleSetGClogs}}}}
+         <div>
+            <div class="updateItem">To use logs, create a table "GC_logs"</div> 
+            <button onclick="admin.createTableLogs();">Create table</button>
+         </div>
+         {{?}}
+         {{? {{isVisibleSetDBGCOnline}}}}
+         <div>To use the GCOnline, set the data of the database in modules/_admin/GCOnline/GCOnline.php</div>
+         {{?}}
+         {{? {{isVisibleInitGCOnline}}}}
+         <div>
+            <div class="updateItem">To use GCOnline, must install</div> 
+            <button onclick="admin.initGCOnline();">Install GCOnline</button>
+         </div>
+         {{?}}
+      </div>
+   </div>
+</div>

@@ -1,0 +1,93 @@
+/*Панель авторизации*/
+.GC-_admin_auth {
+   margin: 100px 300px 0px;    
+   width: 380px;
+   background: #313131;
+   color: #fff;
+   text-align: center;
+   border-radius: 5px;
+   padding: 10px 5px 10px;
+}
+/*пароль в конфиг*/
+.GC-_admin_auth_setPassword {
+   margin-top: 100px;
+   text-align: center;
+}
+/*Ошибка пароля*/
+.GC-_admin_auth #error {
+   color: #FF5722;
+   font-size: 14px;
+   display: none;
+}
+
+/*Кнопки обновлнения*/
+.GC-page-_admin_main .updateItem {
+   display: inline-block;
+   vertical-align: middle;
+   margin-right: 10px;
+   padding: 5px 0px;
+}
+
+/*Текст логов*/
+.logText {
+   font-size: 14px !important;
+}
+/*Показать отчет*/
+.showReply {
+   color: #1565C0;
+   cursor: pointer;
+}
+/*Отчет*/
+.fullReply {
+   width: 100%;
+   border: none;
+   min-height: 400px;
+}
+
+/*Установка GCOnline*/
+#initGCOnline_box {
+   padding: 10px 0px 30px;
+   text-align: center;
+}
+
+/*Действия со скриптом*/
+.scriptButton {
+   vertical-align: top;
+   margin-left: 5px;
+   cursor: pointer;
+   background: url(images/buttons.png);
+   background-position-y: 0px;
+   background-repeat: no-repeat;
+   height: 21px;
+   width: 21px;
+   display: inline-block;
+}
+.scriptButton:first-child {
+   margin-left: 0px;
+}
+.scriptButton:hover {
+   opacity: 0.9;
+}
+.scriptButton:active {
+   opacity: 0.8;
+}
+
+/*Панель создания скрипта*/
+.newScriptBox {
+   padding: 10px;
+}
+.newScriptData {
+   padding-bottom: 10px;
+}
+.newScriptBox .name {
+   width: 150px;
+}
+.newScriptBox .help {
+   color: #cecece;
+   font-size: 14px;
+}
+.newScriptBox #error {
+   margin-bottom: 5px;
+   color: #ff0000;
+   font-size: 14px;
+}

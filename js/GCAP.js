@@ -13,7 +13,6 @@
  * Список системных функций:
  *    initConfig - Устанавливаем конфигурацию
  *    setResponse - Применяем полученую страницу
- *    pageReady - Вызываем функцию В подключенных скриптах при полной готовности страницы
  *    getPageName - Возращает идентификатор текущей страницы
  *
  * Список событий:
@@ -24,17 +23,19 @@
 GCAP = {
    /*
     * Инициализируем фунции, добавляет функции в GCF
-    * @param config (object) - конфигурация с информацией о структуре сайта
-    *    default_block (string) - полный идентификатор блока, куда загружать страницы
-    *    default_path (string) - корневой каталог сайта, если сайт расположен в корне домена, то пусто
+    * @param config {object} - конфигурация с информацией о структуре сайта
+    *    default_block {string} - полный идентификатор блока, куда загружать страницы
+    *    default_path {string} - корневой каталог сайта, если сайт расположен в корне домена, то пусто
     */
    init: function(config) {
       // Устанавливаем конфигурацию
       GCAP.initConfig(config);
 
       // Событие перехода по истории страниц
-      window.addEventListener('popstate', function(e) {
-         if(e.state) GCAP.TP('/' + e.state.url, 2, false, e);
+      window.addEventListener('popstate', function(event) {
+         if(event.state) {
+            GCAP.TP(event.state.url, 2, false, event);
+         }
       }, false);
 
       // Подписываемся, на загрузку страниц, что бы обрабоать новые ссылки
@@ -43,50 +44,53 @@ GCAP = {
       });
 
       // Редакируем историю
-      window.history.replaceState({'url': location.pathname.substring(1) + location.search}, '');
+      window.history.replaceState({'url': this.getPageName() + location.search}, '');
 
       // Сообщаем о загрузке страницы
       GCF.eventCar.send('onPageReady', {pageName: GCAP.getPageName()});
-
-      // Сообщаем о готовности страницы
-      GCAP.pageReady(GCAP.getPageName());
    },
 
    /*
     * Ajax переключение страниц
-    * @param button (element or string) - ссылка(teg <a>) или строка с url
-    * @param method (int) - тип истории 1: новая страница, 2: переход по истории
-    * @param selector (string or false) - полный сеоектор блога для вставки страницы, еесли false, то будет GCAP.config.default_block
-    * @param event (event) - события вызывающее функцию
+    * @param button {Element || String} - ссылка{teg <a>} или строка с url
+    * @param method {Integer} - тип истории 1: новая страница, 2: переход по истории
+    * @param selector {String || Boolean} - полный селектор блока для вставки страницы, если false, то будет GCAP.config.default_block
+    * @param event {event} - события вызывающее функцию
     */
    TP: function(button, method, selector, event) {
       method = method || 1;
       // Проверяем доступно ли Ajax функции
-      if (GCF.getXH() && (!event || (event && event.button == 0) || method == 2)) {
+      if (GCF.getXH() && (!event || (event && !event.button) || method == 2)) {
          selector = selector || GCAP.config.default_block;
          // Получаем URL
-         url = typeof(button) == 'string' ? button : button.pathname + button.search + button.hash;
+         var url = typeof button == 'string' ? button : GCAP.getPageName(button.pathname) + button.search + button.hash;
+
          GCF.eventCar.send('onPageLoading', {url: url});
          
          if(method == 1) {
-            history.pushState({ 'url': url.slice(1)}, '', url);
+            history.pushState({'url': url}, '', url);
          }
          // Запрашиваем страницу
          GCF.AJ('', {
             'method': 'api.getPage',
             'url': url,
             'template': document.body.dataset.template
-         }, function(response, e) {
-            if (e && !response.reload) {
+         }, function(response) {
+            if (response && !response.reload) {
                // Если новая страница, то сохраняем в истории
                // Устанавливаем страницу
                GCAP.setResponse(response, selector);
+               scrollTo(0, 0);
             } else {
                location.href = url;
             }
          }, true);
          if (event) {
-            event.preventDefault ? event.preventDefault() : event.returnValue = false;
+            if (event.preventDefault) {
+               event.preventDefault()
+            } else {
+               event.returnValue = false;
+            }
          }
          return false;
       }
@@ -96,7 +100,7 @@ GCAP = {
     * Перебираем ссылки с класом link для использования ajax
     */
    parseLink:  function() {
-      GCF.elemsCall('a.link', function(link){
+      GCF.elemsCall('a.link', function(link) {
          link.addEventListener('click', function(event) {
             return GCAP.TP(this, 1, false, event);
          }, false);
@@ -109,17 +113,19 @@ GCAP = {
 
    /*
     * Устанавливаем конфигурацию
-    * @param config (object) - конфигурация с информацией о структуре сайта. См. GCAP.init();
+    * @param config {Object} - конфигурация с информацией о структуре сайта. См. GCAP.init();
     */
    initConfig: function(config) {
       config = config || {}; // Локальная конфигурация
 
       GCAP.config = {
-         'default_block': '#GC-window', // Блок в который загружать страницы
+         'default_block': '#GC', // Блок в который загружать страницы
          'default_path': '', // Корень сайта
          'default_page': 'index' // Страница по уполчанию(корень сайта)
       }
-      if(config.default_path) config.default_path = config.default_path + '/';
+      if(config.default_path) {
+         config.default_path += '/';
+      }
       GCF.forEach(config, function(value, key) {
          GCAP.config[key] = config[key];
       });
@@ -127,8 +133,8 @@ GCAP = {
 
    /*
     * Применяем полученую страницу
-    * @param response (string) - строка с json результат GCAP.TP()
-    * @param selector (string) - полный сеоектор блога для вставки страницы, еесли false, то будет GCAP.config.default_block
+    * @param response {String} - строка с json результат GCAP.TP()
+    * @param selector {String} - полный сеоектор блога для вставки страницы, еесли false, то будет GCAP.config.default_block
     */
    setResponse: function(response, selector) {
       var 
@@ -142,26 +148,22 @@ GCAP = {
       GCF.Q(selector).innerHTML = '<div class="GC-page GC-page-' + response.className + '">' + response.HTML + '</div>';
 
       // Подключаем ресурсы
-      while (response.resource[i]) {
+      for (var i = 0; i < response.resource.length; i++) {
          resource = response.resource[i];
          if (!GCF.Q(types[resource.type] + resource.url + '"]'))  {
             if (resource.type == 'js') {
                var res = document.createElement('script');
-               res.type  = 'text/javascript';
-               res.src   = resource.url; 
-               res.onload  = function() {
-                  GCAP.pageReady(resource[1]);
-               };
+               res.type = 'text/javascript';
+               res.src = resource.url; 
             } else {
                var res = document.createElement('link');
-               res.rel  = 'stylesheet';
-               res.type  = 'text/css';
-               res.href   = resource.url;
+               res.rel = 'stylesheet';
+               res.type = 'text/css';
+               res.href = resource.url;
             }
 
             document.head.appendChild(res);
          }
-         i++;
       }
 
       // Сообщаем о загрузке страницы
@@ -169,24 +171,12 @@ GCAP = {
    },
 
    /*
-    * Вызываем функцию В подключенных скриптах при полной готовности страницы
-    * @param pageName (string) - url загружаемой страницы
-    */
-   pageReady: function(pageName) {
-      pageName = pageName || GCAP.config.default_page;
-
-      pageName = 'page_' + pageName;
-      
-      if (window[pageName]) {
-         window[pageName].init();
-      }
-   },
-
-   /*
     * Возращает идентификатор текущей страницы
+    * param url {String} - url[Не обязательно]
     * return getPageName (string) - идентификатор текущей страницы
     */
-   getPageName: function() {
-      return location.pathname.substring(1).slice(GCAP.config.default_path.length) || GCAP.config.default_page;
+   getPageName: function(url) {
+      url = url || location.pathname
+      return url.substring(1).slice(GCAP.config.default_path.length) || GCAP.config.default_page;
    }
 }

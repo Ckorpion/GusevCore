@@ -1,6 +1,6 @@
 /**
  * Класс GCF
- * Version: 3.15 of 15.10.2016
+ * Version: 3.17 of 14.01.2017
  * 
  * Сборник функций и прототипов
  * http://gusevcore.ru
@@ -43,6 +43,7 @@
  *    eventCar - Объект для работы с eventCar:
  *       send - Отправляет событие
  *       subscribe - Подписывается на событие
+ *       getHandlers - Получить обработчики событий
  *    device - Объект для работы с устройством:
  *       fs - Объект для работы с Fullscreen:
  *          init - Инициализируем функции для работы с Fullscreen
@@ -61,13 +62,21 @@
  *    scroll - Объект для работы с scroll
  *       setSpeed - Установить скорость по умолчанию
  *       to - Плавно прокрутить
+ *    context - Объект для работы с контекстом
+ *       init - Иницилизирует контекст
+ *       render - Находит и запоминает элементы связанные с конткстом 
+ *       addModel - Добавляет модель контекста
+ *       set - Устанавливает значение в контекст
+ *       get - Получает значение контекста
  *
  * Список событий:
  *    fullScreenChange - При смене статуса полноэкранного режима
+ *    onChangeDOM - При изменении DOM структуры
+ *    onChangeContect - При изменении контекста
  */
 
 GCF = {
-  version: '3.12',
+  version: '3.17',
    /**
     * Полная иницилизация GCF
     *    Прототипы
@@ -516,7 +525,7 @@ GCF = {
     * Объект для работы с eventCar
     */
    eventCar: {
-      GCF_events: {},    // События
+      _GCF_events: {},    // События
 
       /**
        * Отправляет событие
@@ -529,16 +538,12 @@ GCF = {
             result = [],
             response;
 
-         if (!this.GCF_events) {
-            this.GCF_events = {};
-         }
-
-         if (this.GCF_events[eventName]) {
-            while (this.GCF_events[eventName][i]) {
+         if (this._GCF_events[eventName]) {
+            while (this._GCF_events[eventName][i]) {
                if (this.tagName) {
-                  response = this.GCF_events[eventName][i].bind(this)(eventName, data);
+                  response = this._GCF_events[eventName][i].bind(this)(eventName, data);
                } else {
-                  response = this.GCF_events[eventName][i](eventName, data);
+                  response = this._GCF_events[eventName][i](eventName, data);
                }
                if (response) {
                   result.push(response);
@@ -556,14 +561,47 @@ GCF = {
        * @param callback (Function) - вызывается при событии. Параметры: eventName, data
        */
       subscribe: function(eventName, callback) {
-         if (!this.GCF_events) {
-            this.GCF_events = {};
-         }
-         if (this.GCF_events[eventName]) {
-            this.GCF_events[eventName].push(callback);
+         // Инициализация системных событий
+         this._initEvents(eventName);
+
+         if (this._GCF_events[eventName]) {
+            this._GCF_events[eventName].push(callback);
          } else {
-            this.GCF_events[eventName] = [callback];
+            this._GCF_events[eventName] = [callback];
          }
+      },
+
+      /**
+       * Получить обработчики событий
+       * @param eventName {String} - Название события
+       * @return {Array of Function} - Массив обработчиков
+       */
+      getHandlers: function(eventName) {
+         return this._GCF_events[eventName];
+      },
+
+      /**
+       * Инициализация системных событи
+       * @param eventName {String} - Название события
+       */
+      _initEvents: function(eventName) {
+         // При подписки на изменение DOM
+         if (eventName == 'onChangeDOM' && !this.getHandlers(eventName)) {
+            this._initObserverDOM();
+         }
+      },
+
+      /**
+       * Инициализация события изменения DOM
+       */
+      _initObserverDOM: function() {
+         var 
+            MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver,
+            Observer = new MutationObserver(function(mutations) {
+               this.send('onChangeDOM', mutations);
+            }.bind(this));
+
+         Observer.observe(GCF.Q('body'), {childList: true, subtree: true});
       }
    },
 
@@ -814,6 +852,207 @@ GCF = {
             }
          
          requestAnimationFrame(step);
+      }
+   },
+
+   /**
+    * Объект для работы с контекстом
+    */
+   context: {
+      _models: {},      // Модели
+      _context: {},     // Контекст
+
+      /**
+       * Иницилизирует контекст
+       * @param config {Object} - Конфигурация
+       *    ObserverDOM {Boolean} - При изменении DOM выполнять render
+       *    SendEvents {Boolean} - Отправлять событие onChangeContect, при изменении контекста
+       *    Render {Boolean} - Выполнить render при инициализации
+       */
+      init: function(config) {
+         // Нужна ли подписка на изменении DOM
+         if (config.ObserverDOM) {
+            GCF.eventCar.subscribe('onChangeDOM', this.render.bind(this));
+
+            // Выполним рендер
+            config.Render = true;
+         }
+
+         // Нужна ли отправка событий
+         if (config.SendEvents) {
+            this._sendEvents = true;
+         }
+
+         // Нужно ли выполнить рендер при инициализации
+         if (config.Render) {
+            this.render();
+         }
+      },
+
+      /**
+       * Находит и запоминает элементы связанные с конткстом 
+       */
+      render: function() {
+         // Получим все не обработанные елементы
+         var blocks = GCF.Q('[GCF-bind]', true);
+
+         for (var i = 0; i < blocks.length; i++) {
+            // Для каждого элемент создадим модель
+            this.addModel({
+               name: blocks[i].getAttribute('GCF-bind'),                // Поле контекста
+               set: this._defaultSetModel,                              // Функция установки значения
+               options: {
+                  element: blocks[i],                                   // Элемент
+                  attribute: blocks[i].getAttribute('GCF-bind-attr')    // В какой атрибоут ложим данные
+               }
+            });
+
+            // Удалим атрибут, что бы повторно не обрабатывать
+            blocks[i].removeAttribute('GCF-bind');
+         }
+      },
+
+      /**
+       * Добавляет модель контекста
+       * @param model {Оbject} - Модель
+       *    name {String} - Поле контекста.
+       *    set {Function} - Функция вызываемая при установке значения в контекст. [Не обязателен]
+       *    get {Function} - Функция вызываемая при получении значения из контекста. [Не обязателен]
+       *    options {Object} - Дополнительные данные. [Не обязателен]
+       */
+      addModel: function(model) {
+         var 
+            newModel = this._getBaseModelByName(model.name, true),
+            modelName = model.name.split('/').slice(-1);
+
+         // Если у данного контекста нет моделий создадим, иначе добавим
+         if (!newModel[modelName]) {
+            newModel[modelName] = [model];
+         } else {
+            newModel[modelName].push(model);
+         }
+      },
+
+      /**
+       * Устанавливает значение в контекст
+       * @param name {String} - Поле контекста
+       * @param value {*} - Значение контекста
+       */
+      set: function(name, value) {
+         var 
+            model = this._getBaseModelByName(name),
+            context = this._getBaseContextByName(name, true),
+            contextName = name.split('/').slice(-1);
+
+         // Присвоим значение контексту
+         context[contextName] = value;
+
+         // Если есть модели
+         if (model) {
+            for (var i = 0; i < model.length; i++) {
+               // Если есть функция set вызовем
+               if (model[i].set) {
+                  model[i].set(name, value, model[i].options);
+               }
+            }
+         }
+
+         // Если нужно отправлять события
+         if (this._sendEvents) {
+            var contextNames = name.split('/');
+
+            for (var i = contextNames.length - 1; i >= 0; i--) {
+               GCF.eventCar.send('onChangeContect', {
+                  name: contextNames.slice(0, i + 1).join('/'), 
+                  value: this.get(contextNames.slice(0, i + 1).join('/'))
+               });
+            }
+         }
+      },
+
+      /**
+       * Получает значение контекста
+       * @param name {String} - Поле контекста
+       * @return {*} - Значение контекста
+       */
+      get: function(name) {
+         var 
+            model = this._getBaseModelByName(name),
+            context = this._getBaseContextByName(name);
+
+         // Если есть модели
+         if (model) {
+            for (var i = 0; i < model.length; i++) {
+               // Вернем результат первой найденной функции get
+               if (model[i].get) {
+                  return model[i].get(name, context);
+               }
+            }
+         }
+
+         // Если моделей нет, вернем исходный контекст
+         return context;
+      },
+
+      /**
+       * Получить базу модели
+       * @param name {String} - Поле контекста
+       * @param isCreate {Boolean} - Создавать базу если нет
+       * @return {Object} - База модели
+       */
+      _getBaseModelByName: function(name, isCreate) {
+         return this._getBaseByName(name, isCreate, this._models);
+      },
+
+      /**
+       * Получить базу контекста
+       * @param name {String} - Поле контекста
+       * @param isCreate {Boolean} - Создавать базу если нет
+       * @return {Object} - База контекста
+       */
+      _getBaseContextByName: function(name, isCreate) {
+         return this._getBaseByName(name, isCreate, this._context);
+      },
+
+      /**
+       * Получить базу данных
+       * @param name {String} - Поле контекста
+       * @param isCreate {Boolean} - Создавать базу если нет
+       * @return {Object} - База данных
+       */
+      _getBaseByName: function(name, isCreate, data) {
+         name = name.split('/');
+         // Для создания нам нужна ссылка, для чтения только значения
+         var len = isCreate ? name.length - 1 : name.length;
+
+         for (var i = 0; i < len; i++) {
+            // Если создаем
+            if (isCreate) {
+               // Если в этом значении не объект иили пустота
+               if (typeof data[name[i]] != 'object' || data[name[i]] === undefined) {
+                  // Перезапишим
+                  data[name[i]] = {};
+               }
+            } else if (data[name[i]] === undefined) {
+               // Если читаем и контекста нет
+               return undefined;
+            }
+
+            data = data[name[i]];
+         }
+
+         return data;
+      },
+
+      /** 
+       * Стандартный сеттер модели для DOM элементов
+       * @param name {String} - Поле контекста
+       * @param value {*} - Значение контекста
+       * @param options {Object} - Дополнительные данные. [Не обязателен]
+       */
+      _defaultSetModel: function(name, value, options) {
+         // Установим в атрибут из опций значение
+         options.element[options.attribute] = value;
       }
    }
 }

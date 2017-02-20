@@ -1,0 +1,36 @@
+body {
+   padding: 0px;
+   margin: 0px;
+   font-family: Tahoma, Arial;
+   overflow-y: scroll;
+   text-align: center;
+   color: #313131;
+   font-size: 18px;
+   line-height: 1.5;
+   word-break: break-word;
+}
+
+#GC {
+   max-width: 1000px;
+   width: 100%;
+   display: inline-block;
+   vertical-align: top;
+   text-align: left;
+}
+
+#GC > .GC-page {
+   padding: 10px 5px 10px;
+}
+
+.info {
+   text-align: center;
+}
+
+.info a {
+   color: #313131;
+   text-decoration: none;
+}
+
+.info a:hover {
+   text-decoration: underline;
+}
