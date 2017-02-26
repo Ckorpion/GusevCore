@@ -25,7 +25,6 @@ GCAP = {
     * Инициализируем фунции, добавляет функции в GCF
     * @param config {object} - конфигурация с информацией о структуре сайта
     *    default_block {string} - полный идентификатор блока, куда загружать страницы
-    *    default_path {string} - корневой каталог сайта, если сайт расположен в корне домена, то пусто
     */
    init: function(config) {
       // Устанавливаем конфигурацию
@@ -34,7 +33,7 @@ GCAP = {
       // Событие перехода по истории страниц
       window.addEventListener('popstate', function(event) {
          if(event.state) {
-            GCAP.TP(event.state.url, 2, false, event);
+            GCAP.TP(event.state.url, {method: 2, event: event});
          }
       }, false);
 
@@ -44,52 +43,61 @@ GCAP = {
       });
 
       // Редакируем историю
-      window.history.replaceState({'url': this.getPageName() + location.search}, '');
+      window.history.replaceState({'url': this.getUrl()}, '');
 
       // Сообщаем о загрузке страницы
-      GCF.eventCar.send('onPageReady', {pageName: GCAP.getPageName()});
+      GCF.eventCar.send('onPageReady', {pageName: GCAP.getUrl()});
    },
 
    /*
     * Ajax переключение страниц
     * @param button {Element || String} - ссылка{teg <a>} или строка с url
-    * @param method {Integer} - тип истории 1: новая страница, 2: переход по истории
-    * @param selector {String || Boolean} - полный селектор блока для вставки страницы, если false, то будет GCAP.config.default_block
-    * @param event {event} - события вызывающее функцию
+    * @param params {Object} - параметры перехода
+    *    method {Integer} - тип истории 1: новая страница, 2: переход по истории
+    *    selector {String} - полный селектор блока для вставки страницы, если не указан, то будет GCAP.config.default_block
+    *    event {event} - события вызывающее функцию
+    *    callback {Function} - функция вызываемая после перехода
+    *    data {Object} - отправляются POST запросом
     */
-   TP: function(button, method, selector, event) {
-      method = method || 1;
+   TP: function(button, params) {
+      params = params || {};
+      params.event = params.event || event;
+      params.method = params.method || 1;
       // Проверяем доступно ли Ajax функции
-      if (GCF.getXH() && (!event || (event && !event.button) || method == 2)) {
-         selector = selector || GCAP.config.default_block;
+      if (GCF.getXH() && (!params.event || (params.event && !params.event.button) || params.method == 2)) {
          // Получаем URL
-         var url = typeof button == 'string' ? button : GCAP.getPageName(button.pathname) + button.search + button.hash;
+         var url = typeof button == 'string' ? GCAP.getUrl(button) : GCAP.getUrl(button.href);
 
          GCF.eventCar.send('onPageLoading', {url: url});
          
-         if(method == 1) {
+         if(params.method == 1) {
             history.pushState({'url': url}, '', url);
          }
          // Запрашиваем страницу
          GCF.AJ('', {
             'method': 'api.getPage',
             'url': url,
-            'template': document.body.dataset.template
+            'template': document.body.dataset.template,
+            'params': params.data || {}
          }, function(response) {
             if (response && !response.reload) {
                // Если новая страница, то сохраняем в истории
                // Устанавливаем страницу
-               GCAP.setResponse(response, selector);
+               GCAP.setResponse(response, params.selector || GCAP.config.default_block);
                scrollTo(0, 0);
+               // Если есть функция обратного вызова, вызовем
+               if (params.callback) {
+                  params.callback(response);
+               }
             } else {
                location.href = url;
             }
          }, true);
-         if (event) {
-            if (event.preventDefault) {
-               event.preventDefault()
+         if (params.event) {
+            if (params.event.preventDefault) {
+               params.event.preventDefault()
             } else {
-               event.returnValue = false;
+               params.event.returnValue = false;
             }
          }
          return false;
@@ -102,7 +110,7 @@ GCAP = {
    parseLink:  function() {
       GCF.elemsCall('a.link', function(link) {
          link.addEventListener('click', function(event) {
-            return GCAP.TP(this, 1, false, event);
+            return GCAP.TP(this, {method: 1, event: event});
          }, false);
          link.removeClassName('link');
       });
@@ -120,11 +128,7 @@ GCAP = {
 
       GCAP.config = {
          'default_block': '#GC', // Блок в который загружать страницы
-         'default_path': '', // Корень сайта
          'default_page': 'index' // Страница по уполчанию(корень сайта)
-      }
-      if(config.default_path) {
-         config.default_path += '/';
       }
       GCF.forEach(config, function(value, key) {
          GCAP.config[key] = config[key];
@@ -167,16 +171,19 @@ GCAP = {
       }
 
       // Сообщаем о загрузке страницы
-      GCF.eventCar.send('onPageReady', {pageName: GCAP.getPageName()});
+      GCF.eventCar.send('onPageReady', {pageName: GCAP.getUrl()});
    },
 
    /*
     * Возращает идентификатор текущей страницы
     * param url {String} - url[Не обязательно]
-    * return getPageName (string) - идентификатор текущей страницы
+    * return {String} - URL адрес
     */
-   getPageName: function(url) {
-      url = url || location.pathname
-      return url.substring(1).slice(GCAP.config.default_path.length) || GCAP.config.default_page;
+   getUrl: function(url) {
+      if (!this._a) {
+         this._a = document.createElement('a');
+      }
+      this._a.href = url || window.location.href;
+      return this._a.pathname + this._a.search + this._a.hash;
    }
 }

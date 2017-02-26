@@ -1,7 +1,7 @@
 <?
    /**
     * GusevCore
-    * Version 4.0 of 19.02.2017
+    * Version 4.01 of 26.02.2017
     *
     * Платформа для веб-разработки
     * http://gusevcore.ru
@@ -20,8 +20,8 @@
     */
    class GC {
       private $context = array('_GC' => array(
-         'version' => '4.0',
-         'versionDate' => '19.02.2017',
+         'version' => '4.01',
+         'versionDate' => '26.02.2017',
          // Логирование
          'log' => array(
             'timeStart' => null,       // Время начала выполнения скрипта
@@ -100,15 +100,19 @@
 
                   if  (isset($params['name'])) {                        // Уазано название страницы
                      $page_name = $params['name'];
-                  } else if (isset($params['url'])) {                   // Указанна ссылка без корня
+                  } else if (isset($params['url'])) {                   // Указанна ссылка
                      $url = parse_url($params['url']);
-                     $path = isset($url['path']) ? $url['path'] : '';
-                     $_URL = $path;
                      if(isset($url['query'])) {
                         parse_str($url['query'], $_GET);
                      }
+                     $url = isset($url['path']) ? $url['path'] : '';
+                     $path = substr($_SERVER['SCRIPT_NAME'], 0, -7);    // Обрежим /GC.php
+                     if ($path) {                                       // Если сайт не в корне, обрежим каталог
+                        $url = str_replace($path . '/', '', $url);
+                     }
+                     $_URL = $url;
 
-                     $page_name = $this -> getPageName($path);          // Получим название страницы в modules по url
+                     $page_name = $this -> getPageName($url);           // Получим название страницы в modules по url
                   }
                   if ($page_name) {                                     // Страница найдена
                      $response = $this -> getPage($page_name, $data, $options);

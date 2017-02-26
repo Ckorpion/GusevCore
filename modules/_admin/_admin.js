@@ -1,5 +1,5 @@
 window.addEventListener('load', function() {
-   GCAP.init({default_path: 'x/isomorphic'});
+   GCAP.init();
 });
 
 GCF.eventCar.subscribe('onPageReady', function(event, page){

@@ -4,6 +4,4 @@ RewriteEngine on
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)$ GC.php
 
-ErrorDocument 404 GC.php
-
 php_flag display_errors on
