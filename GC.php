@@ -1,7 +1,7 @@
 <?
    /**
     * GusevCore
-    * Version 4.01 of 26.02.2017
+    * Version 4.02 of 21.05.2017
     *
     * Платформа для веб-разработки
     * http://gusevcore.ru
@@ -20,8 +20,8 @@
     */
    class GC {
       private $context = array('_GC' => array(
-         'version' => '4.01',
-         'versionDate' => '26.02.2017',
+         'version' => '4.02',
+         'versionDate' => '21.05.2017',
          // Логирование
          'log' => array(
             'timeStart' => null,       // Время начала выполнения скрипта
@@ -39,7 +39,7 @@
       ));
       
       public function start() {
-         GLOBAL $GCF, $CONFIG, $_START, $_URL;
+         GLOBAL $GCF, $CONFIG, $_START, $_URL, $_PATH;
 
          $this -> setCtx('_GC/log/timeStart', $this -> getNowTime());   // Начнем отчет времени
          $_POST = json_decode(file_get_contents('php://input'), true);  // Получим POST запрос
@@ -60,14 +60,15 @@
             return;
          }
 
+         $_PATH = explode('/', $_SERVER['SCRIPT_NAME']);                // Получим корень сайта
+         unset($_PATH[count($_PATH) - 1]);
+         $_PATH = implode('/', $_PATH);
+
          if (!isset($_POST['method']) AND !isset($_GET['method'])) {    // Запрос страницы
             // Получаем адрес запрашиваемой страницы
             $url = parse_url($_SERVER['REQUEST_URI'])['path'];
             $_URL = $url;
-            $path = substr($_SERVER['SCRIPT_NAME'], 0, -7);             // Обрежим /GC.php
-            if ($path) {                                                // Если сайт не в корне, обрежим каталог
-               $url = str_replace($path . '/', '', $url);
-            }
+            $url = str_replace($_PATH . '/', '', $url);                 // Обрежим каталог
             $page_name = $this -> getPageName($url);                    // Получает название страницы по URL из config.php
 
             if (!$page_name) {                                          // Страница не найдена
@@ -106,10 +107,7 @@
                         parse_str($url['query'], $_GET);
                      }
                      $url = isset($url['path']) ? $url['path'] : '';
-                     $path = substr($_SERVER['SCRIPT_NAME'], 0, -7);    // Обрежим /GC.php
-                     if ($path) {                                       // Если сайт не в корне, обрежим каталог
-                        $url = str_replace($path . '/', '', $url);
-                     }
+                     $url = str_replace($_PATH . '/', '', $url);
                      $_URL = $url;
 
                      $page_name = $this -> getPageName($url);           // Получим название страницы в modules по url
@@ -447,7 +445,7 @@
             if (is_array($value)) {
                $newParams = array_merge($newParams, $this -> paramsRender($value, $path . $key . '/'));
             } else {
-               if (preg_match('/{{.+}}/im', $html)) {
+               if (preg_match('/{{.+}}/im', $value)) {
                   $value = preg_replace('/{{.+}}/im', '', $value);   // Удалим параметры из параметров
                }
                $newParams['{{' . $path . $key . '}}'] = $value;
@@ -518,11 +516,12 @@
        *    url - Ссылка на ресурс
        */
       private function getResourceUrl($resource) {
+         GLOBAL $_PATH;
+
          $resource = array_unique($resource);
          sort($resource);
          $urls = array();
-         // Обрежим /GC.php
-         $rootUrl = substr($_SERVER['SCRIPT_NAME'], 0, -7) . '/modules/';
+         $rootUrl = $_PATH . '/modules/';
 
          for ($i=0; $i < count($resource); $i++) { 
             $item = explode('!', $resource[$i]);
